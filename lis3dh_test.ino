@@ -17,10 +17,17 @@
 #define LIS3DH_REG_CTRL1      0x20
 
 int LIS3DH_001_address = 25; 
+
+
 void setup() {
+  
+  //시리얼 통신 초기화, 통신속도: 9600bps
   Serial.begin(9600);
+
+  //MCU 내부의 I2C 통신장치를 I2C 마스터 모드로 초기화.
   Wire.begin();
 }
+
 
 int i2c_readOneByte(int address, int sub_address)
 {
