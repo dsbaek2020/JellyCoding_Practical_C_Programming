@@ -2,7 +2,7 @@
  *
  * @brief 아두이노에서 LIS3DH 가속도 센서를 인터페이스
  * @details 센서 설정, 가속도 데이터 획득
- * @author syl
+ * @author kyl
  * @date 2020-06-06
  * @version 0.0.1
  *
