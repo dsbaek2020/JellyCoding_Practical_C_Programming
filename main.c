@@ -1,54 +1,112 @@
 #include <stdio.h>
-#include <math.h>
 
-#define G     9.8//m/s^2
-#define PI    3.14//
-#define V     100//m/s
-#define TARGET  450//m
 
-int main()
-{
-    float deg;
-    float rad;
-    float v_y;
-    float T;
-    float x;
-    float error[10];
-    int i=0;
-    float sum;	
-    float a;
-		
+#define BOARD_WIDTH       3
+#define BOARD_HEIGHT      3
 
-    while(i<10)
+
+
+/*
+    int i =3;
+    while(i>=1)
     {
-        printf("각도를 입력하세요[deg]: ");
-        scanf("%f", &deg);    // 실수를 입력받아서 변수에 저장
-        rad=(PI/180.0)*deg;
-        v_y=V*sin(rad);
-        T=v_y/G;
-        x=V*cos(rad)*T;
-        error[i]=TARGET-x;
-
-        printf("수직속도는 %f[m/s]입니다.\n", v_y);    // 변수의 내용을 출력
-        printf("비행시간은 %f[s]입니다.\n",T);
-        printf("비행거리는 %f[m]입니다.\n",x);
-        printf("오차는 %f[m]입니다.\n",error[i]);
-        i++;
-    }
-    i=0;
-    sum=0;
-    while(i<10)
-    {
-      sum=sum+error[i];
-      i++;
-    }
-    a=sum/10;
-    printf("오차 평균값은 %f[m]입니다.\n",a);	
-    if((-10<a)&&(a<10))
-    {
-    printf("평균오차가 적습니다.\n");
+      /// my code 
+      i--;
     }
 
-   
-    return 0;
+    for(int k=1; k<=3; k++){
+      // my code
+    }
+
+
+*/
+
+/*
+char GameBoard[BOARD_HEIGHT][BOARD_WIDTH] = {{'1', '2', '3'}, 
+                                             {'4', '5', '6'},
+                                             {'7', '8', '9'} };
+*/
+char GameBoard[BOARD_HEIGHT][BOARD_WIDTH] = {{'e', 'e', 'e'}, 
+                                             {'e', 'e', 'e'},
+                                             {'e', 'e', 'e'} };
+
+
+int indexTable[9][2] = {
+  {0,0}, 
+  {0,1},
+  {0,2}, 
+  {1,0}, 
+  {1,1},
+  {1,2},
+  {2,0}, 
+  {2,1},
+  {2,2},
+};
+
+#define PLAYER_A    1
+#define PLAYER_B    2
+
+int currentPlayer = PLAYER_A;
+
+void displayBoard(void){
+
+  printf("---Display Game Board--- \n");
+  //printf("%c", GameBoard[1][2]);
+  for(int j=0; j<3; j++){
+    for(int k=0; k<3; k++){
+          printf("%c ", GameBoard[j][k]);
+    }
+    printf("\n");
+  }
+}
+
+int main(void) {
+
+  displayBoard();
+
+  int BoardPositionX, BoardPositionY;
+  int position;
+  
+  
+
+  while(1){
+
+    printf("어디에 표시 할 것 인가요? (1~9)칸 중에서 고르시오");
+    scanf("%d", &position);
+    printf("position = %d \n", position);
+
+    if((position >=1) && (position <=9 ))
+    {
+        BoardPositionX = indexTable[position-1][1];
+        BoardPositionY = indexTable[position-1][0];
+
+       
+
+        printf("x = %d y = %d \n", BoardPositionX, BoardPositionY);
+
+        if(GameBoard[BoardPositionY][BoardPositionX] == 'e')
+        {
+            if(currentPlayer == PLAYER_A)
+            {
+              
+              GameBoard[BoardPositionY][BoardPositionX] = 'O';
+              displayBoard();
+              currentPlayer = PLAYER_B;
+
+            }
+            else 
+            {
+              GameBoard[BoardPositionY][BoardPositionX] = 'X';
+              displayBoard();
+              currentPlayer = PLAYER_A;
+            }
+        }else{
+          printf("이곳은 이미 선택되어져있어요. ");
+        }
+      }
+              
+    }
+                                               
+
+  return 0;
 }
