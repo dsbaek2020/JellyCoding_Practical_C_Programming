@@ -52,7 +52,7 @@ int diplayMainPanel(MOVIE_INFO *ptr)
   diplayTitle(ptr+1, 2);
   diplayTitle(ptr+2, 3);
 
-  printf("영화를 선택해 주세요.  0번을 누르시면 종료합니다.");
+  printf("영화를 선택해 주세요.  0번을 누르시면 프로그램을 종료합니다.");
   scanf("%d", &select);  //blocking 함수 
   return select-1;
 }
@@ -71,7 +71,7 @@ int movieReservation(MOVIE_INFO *ptr){
   int reservation =0;
   do{
 
-    printf("좌석을 선택해 주세요(1~16번). 0번을 누르시면 취소 입니다. \n");
+    printf("좌석을 선택해 주세요(1~16번). 0번을 누르시면 메인 메뉴로 돌아갑니다. \n");
     scanf("%d", &selectSeat);  //blocking 함수 
     if(selectSeat == 0){
       printf("취소 되었습니다. 메인 매뉴로 돌아갑니다.\n");
@@ -129,7 +129,7 @@ int main(void) {
      if(ProgramStatus == MAIN){
         selectedMovie = diplayMainPanel(&movies[0]);
 
-        if(selectedMovie > 0)
+        if(selectedMovie >= 0)
         {
           ProgramStatus = RESERVATION;
         }
