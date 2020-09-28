@@ -9,10 +9,12 @@ typedef unsigned char uint8;
 typedef union{
   char seatXY[4][4];//16BYTE
   char seat[16];    //16BYTE
+  int  row[4];      //4BYTE *4 
+  short  couple[8];  //2BYTE *8
 }SEAT;
 
 typedef struct{
-  char UserID[20];  //20BYTE
+  //char UserID[20];  //20BYTE
   SEAT seat;        //16BYTE
 }SEAT_AND_ID;
 
@@ -22,6 +24,8 @@ typedef struct {
   SEAT_AND_ID seat;   //36BYTE
 
 }MOVIE_INFO;  //76BYTE
+
+
 
 
 
@@ -53,19 +57,40 @@ int diplayMainPanel(MOVIE_INFO *ptr)
   diplayTitle(ptr+2, 3);
 
   printf("영화를 선택해 주세요.  0번을 누르시면 프로그램을 종료합니다.");
-  scanf("%d", &select);  //blocking 함수 
+  scanf("%d", &select);  //blocking 함수
+
+  if(select > 3)
+    printf("없는 영화 입니다.\n");
+
+
   return select-1;
 }
 
 int movieReservation(MOVIE_INFO *ptr){
    int selectSeat;
    int returnValue;
+   char yesorno;
+
+   int x,y;
+
 
    printf("제목:");  printf("%s \n",  ptr->movieTitle);
    printf("배우:");  printf("%s \n",  ptr->ActorName);
 
-  //-----------좌석상태 표시----
+  //-----------좌석상태 표시-------
+  //반복(2차원. 반복)
+  printf("좌석상태. \n");
+  for(y = 0; y<4; y++){
 
+      for(x = 0; x<4; x++){
+        printf("%c",  ptr->seat.seat.seatXY[y][x]);
+      }
+      printf("\n");
+
+  }
+  
+
+  
 
   //----------------------------
   int reservation =0;
@@ -84,8 +109,17 @@ int movieReservation(MOVIE_INFO *ptr){
     {
       ptr->seat.seat.seat[selectSeat-1] = 'V';
       printf("%d번으로 예약되었습니다. \n", selectSeat);
-      reservation =1;
-      returnValue = selectSeat;
+
+      printf("continue? (y/n) \n");
+      scanf("%c", &yesorno);  //blocking 함수 
+
+      if(yesorno == 'n'){
+        printf("Thank you");
+        reservation =1;
+        returnValue = selectSeat;
+        break;
+      }
+      
     }
     else{
       printf("%d번 좌석은 이미 예약된 자리입니다. 다른자리를 선택해주세요.\n", selectSeat);
@@ -116,6 +150,7 @@ int main(void) {
 
   // 영화정보가 모두 포함된 구조체 변수 선언
   MOVIE_INFO movies[3];  //76BYTE * 3
+  
   movieDataLoad(&movies[0], "타이타닉", "디카프리오");
   movieDataLoad(&movies[1], "태양의 눈물", "브루스윌리스");
   movieDataLoad(&movies[2], "마션", "맷데이먼");
