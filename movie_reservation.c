@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
 typedef unsigned int uint32;
 typedef unsigned short uint16;
 typedef unsigned char uint8;
+*/
 
+#define EXIT_TO_MAIN    -1
 
 typedef union{
   char seatXY[4][4];//16BYTE
@@ -69,7 +72,7 @@ int diplayMainPanel(MOVIE_INFO *ptr)
 int movieReservation(MOVIE_INFO *ptr){
    int selectSeat;
    int returnValue;
-   char yesorno;
+   char yesorno[5];
 
    int x,y;
 
@@ -89,9 +92,6 @@ int movieReservation(MOVIE_INFO *ptr){
 
   }
   
-
-  
-
   //----------------------------
   int reservation =0;
   do{
@@ -99,8 +99,8 @@ int movieReservation(MOVIE_INFO *ptr){
     printf("좌석을 선택해 주세요(1~16번). 0번을 누르시면 메인 메뉴로 돌아갑니다. \n");
     scanf("%d", &selectSeat);  //blocking 함수 
     if(selectSeat == 0){
-      printf("취소 되었습니다. 메인 매뉴로 돌아갑니다.\n");
-      returnValue = -1;
+      printf("메인 매뉴로 돌아갑니다.\n");
+      returnValue = EXIT_TO_MAIN;
       break;
     }
 
@@ -110,21 +110,17 @@ int movieReservation(MOVIE_INFO *ptr){
       ptr->seat.seat.seat[selectSeat-1] = 'V';
       printf("%d번으로 예약되었습니다. \n", selectSeat);
 
-      printf("continue? (y/n) \n");
-      scanf("%c", &yesorno);  //blocking 함수 
-
-      if(yesorno == 'n'){
-        printf("Thank you");
-        reservation =1;
-        returnValue = selectSeat;
-        break;
-      }
+      reservation =1;
+      returnValue = selectSeat;
+      
       
     }
     else{
       printf("%d번 좌석은 이미 예약된 자리입니다. 다른자리를 선택해주세요.\n", selectSeat);
     }
   }while(reservation != 1);
+
+
 
   
 
