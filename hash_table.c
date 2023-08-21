@@ -39,7 +39,6 @@ void insertEntry(HashTable* ht, const char* key, Person value) {
     unsigned int index = hash(key);
     Entry* new_entry = createEntry(key, value);
 
-    // 충돌 처리: 같은 인덱스에 이미 다른 엔트리가 있으면 연결 리스트로 연결
     if (ht->buckets[index] == NULL) {
         ht->buckets[index] = new_entry;
     } else {
@@ -51,19 +50,28 @@ void insertEntry(HashTable* ht, const char* key, Person value) {
     }
 }
 
-Person findValue(HashTable* ht, const char* key) {
+void deleteEntry(HashTable* ht, const char* key) {
     unsigned int index = hash(key);
-    Entry* entry = ht->buckets[index];
+    Entry* current = ht->buckets[index];
+    Entry* previous = NULL;
 
-    while (entry != NULL) {
-        if (strcmp(entry->key, key) == 0) {
-            return entry->value;
+    while (current != NULL) {
+        if (strcmp(current->key, key) == 0) {
+            if (previous == NULL) {
+                ht->buckets[index] = current->next;
+            } else {
+                previous->next = current->next;
+            }
+            free(current->key);
+            free(current);
+            printf("Key %s deleted.\n", key);
+            return;
         }
-        entry = entry->next;
+        previous = current;
+        current = current->next;
     }
 
-    Person empty_person = {0, ""};
-    return empty_person;
+    printf("Key %s not found.\n", key);
 }
 
 void freeHashTable(HashTable* ht) {
@@ -92,13 +100,9 @@ int main() {
     insertEntry(&ht, "Alice", person2);
     insertEntry(&ht, "Bob", person3);
 
-    Person johnInfo = findValue(&ht, "John");
-    Person aliceInfo = findValue(&ht, "Alice");
-    Person bobInfo = findValue(&ht, "Bob");
-
-    printf("John's Age: %d, Address: %s\n", johnInfo.age, johnInfo.address);
-    printf("Alice's Age: %d, Address: %s\n", aliceInfo.age, aliceInfo.address);
-    printf("Bob's Age: %d, Address: %s\n", bobInfo.age, bobInfo.address);
+    printf("Original Hash Table:\n");
+    deleteEntry(&ht, "Alice");
+    deleteEntry(&ht, "Eve");
 
     freeHashTable(&ht);
 
