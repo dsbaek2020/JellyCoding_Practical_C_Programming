@@ -4,25 +4,21 @@
 
 #define TABLE_SIZE 100
 
-// 예제용 구조체 정의
 typedef struct {
     int age;
     char address[100];
 } Person;
 
-// 해시 테이블의 버킷 구조체
 typedef struct Entry {
     char* key;
     Person value;
     struct Entry* next;
 } Entry;
 
-// 해시 테이블 구조체
 typedef struct HashTable {
     Entry* buckets[TABLE_SIZE];
 } HashTable;
 
-// 해시 함수
 unsigned int hash(const char* key) {
     unsigned int hash_val = 0;
     while (*key) {
@@ -31,14 +27,6 @@ unsigned int hash(const char* key) {
     return hash_val % TABLE_SIZE;
 }
 
-// 해시 테이블 초기화
-void initHashTable(HashTable* ht) {
-    for (int i = 0; i < TABLE_SIZE; i++) {
-        ht->buckets[i] = NULL;
-    }
-}
-
-// 새로운 엔트리 생성
 Entry* createEntry(const char* key, Person value) {
     Entry* new_entry = (Entry*)malloc(sizeof(Entry));
     new_entry->key = strdup(key);
@@ -47,17 +35,22 @@ Entry* createEntry(const char* key, Person value) {
     return new_entry;
 }
 
-// 해시 테이블에 엔트리 추가
 void insertEntry(HashTable* ht, const char* key, Person value) {
     unsigned int index = hash(key);
     Entry* new_entry = createEntry(key, value);
 
-    // 연결 리스트의 가장 앞에 새 엔트리를 추가
-    new_entry->next = ht->buckets[index];
-    ht->buckets[index] = new_entry;
+    // 충돌 처리: 같은 인덱스에 이미 다른 엔트리가 있으면 연결 리스트로 연결
+    if (ht->buckets[index] == NULL) {
+        ht->buckets[index] = new_entry;
+    } else {
+        Entry* current = ht->buckets[index];
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = new_entry;
+    }
 }
 
-// 키를 이용하여 해시 테이블에서 값을 찾음
 Person findValue(HashTable* ht, const char* key) {
     unsigned int index = hash(key);
     Entry* entry = ht->buckets[index];
@@ -69,12 +62,10 @@ Person findValue(HashTable* ht, const char* key) {
         entry = entry->next;
     }
 
-    // 존재하지 않는 경우, 초기화된 값을 반환
     Person empty_person = {0, ""};
     return empty_person;
 }
 
-// 해시 테이블 해제
 void freeHashTable(HashTable* ht) {
     for (int i = 0; i < TABLE_SIZE; i++) {
         Entry* entry = ht->buckets[i];
@@ -89,7 +80,9 @@ void freeHashTable(HashTable* ht) {
 
 int main() {
     HashTable ht;
-    initHashTable(&ht);
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        ht.buckets[i] = NULL;
+    }
 
     Person person1 = {25, "123 Main St"};
     Person person2 = {32, "456 Elm St"};
