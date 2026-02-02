@@ -1,11 +1,18 @@
 ///////////////////////////////////////
-//  단일 연결 리스트(Linked List) 개념도
+//  Linked List + 텍스트 편집기 데모 개요
 //
-//   [head] -> [data|next] -> [data|next] -> [data|next] -> NULL
-//             노드1        노드2           노드3
+//  이 코드는 두 가지 데모를 포함합니다.
+//  1) 단일 연결 리스트(List)
+//     - 노드: [data|next] 로 연결되는 구조
+//     - 제공 메서드: append, insert(index), deleteByIndex(index), readByIndex(index), print, free
 //
-//   각 노드는 data(데이터)와 next(다음 노드 주소)를 가짐
-//   head는 첫 번째 노드를 가리킴
+//  2) 텍스트 박스(TextBox) 기반 미니 편집기
+//     - 내부에 List를 사용해 문자를 저장하고 커서(cursor_index)로 편집
+//     - 제공 동작: 문자 삽입/삭제(커서 앞·뒤), 커서 좌/우 이동, 말풍선 출력(printBubble), 편집 루프(editLoop)
+//     - 콘솔 조작키: ←/→, Backspace, Ctrl-D(Delete), Enter, 인쇄 가능한 문자들
+//
+//  전처리 매크로로 데모 선택: LINKED_LIST_DEMO 또는 TEXT_EDITOR_DEMO
+//  (정의가 없으면 기본으로 텍스트 편집기 데모 실행)
 ///////////////////////////////////////
 
 //
@@ -17,6 +24,7 @@
 
 #include <stdlib.h>   // 동적 메모리 할당(malloc, free) 함수 사용을 위한 헤더
 #include <stdio.h>    // 입출력 함수(printf 등) 사용을 위한 헤더
+#include <string.h>
 #include <ctype.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -462,7 +470,17 @@ void TextBox_deleteBefore(TextBox* tb) {
 
 // 편집 루프: 키 입력에 따라 편집 수행
 void TextBox_editLoop(TextBox* tb) {
-    printf("입력 박스에서는 ←/→/Backspace/Delete/Enter/영문자 사용 가능!\n");
+    clearScreen();
+    printf("✨ Welcome to BubbleText! ✨\n");
+    printf("Type freely and watch your message appear inside a bubble.\n\n");
+    printf("Controls:\n");
+    printf("  • Left/Right Arrow  : Move cursor\n");
+    printf("  • Backspace         : Delete before cursor\n");
+    printf("  • Ctrl-D (Delete)   : Delete after cursor\n");
+    printf("  • Enter/Return      : Finish editing\n");
+    printf("  • Printable keys    : Insert characters at cursor\n\n");
+    printf("Press any key to start editing...\n");
+    (void)getch();
     while (1) {
         tb->printBubble(tb);
         int ch = getch();
@@ -482,9 +500,71 @@ void TextBox_editLoop(TextBox* tb) {
             tb->insert(tb, (char)ch);
         }
     }
-    printf("\n입력 완료!\n");
+    // Finish and show summary
+    clearScreen();
+    printf("\n✅ Done! Here's what you wrote.\n\n");
+
+    // 1) Show the bubble one last time
     tb->printBubble(tb);
-    printf("\n");
+    printf("\n\n");
+
+    // 2) Dump the linked list contents as characters
+    printf("Linked List (chars): ");
+    {
+        ListNode* node = tb->text.head;
+        printf("[");
+        while (node) {
+            printf(" '%c'", node->data);
+            if (node->next) printf(",");
+            node = node->next;
+        }
+        printf(" ]\n");
+    }
+
+    // 3) Visualize indices with arrows
+    printf("Indices:            ");
+    for (int i = 0; i < tb->text.size; ++i) {
+        printf(" %2d ", i);
+    }
+    printf("\nArrows:             ");
+    for (int i = 0; i < tb->text.size; ++i) {
+        printf("  ↓ ");
+    }
+    printf("\nChars:              ");
+    for (int i = 0; i < tb->text.size; ++i) {
+        char ch = tb->text.readByIndex(&tb->text, i);
+        printf("  %c ", ch);
+    }
+    printf("\n\n");
+
+    // 4) Build the final message string and print with a fancy banner
+    {
+        int len = tb->text.size;
+        char* buffer = (char*)malloc((len + 1) * sizeof(char));
+        if (buffer) {
+            for (int i = 0; i < len; ++i) {
+                buffer[i] = tb->text.readByIndex(&tb->text, i);
+            }
+            buffer[len] = '\0';
+
+            // Pretty banner
+            printf("🎉 Final Message 🎉\n");
+            printf("╔");
+            int bar = len + 2; if (bar < 20) bar = 20;
+            for (int i = 0; i < bar; ++i) printf("═");
+            printf("╗\n");
+            printf("║ %s", buffer);
+            // pad spaces to align right border
+            int pad = bar - (int)strlen(buffer) - 1;
+            for (int i = 0; i < pad; ++i) printf(" ");
+            printf("║\n");
+            printf("╚");
+            for (int i = 0; i < bar; ++i) printf("═");
+            printf("╝\n\n");
+
+            free(buffer);
+        }
+    }
 }
 
 // TextBox 초기화 및 메서드 바인딩
