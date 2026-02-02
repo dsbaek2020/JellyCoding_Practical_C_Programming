@@ -18,6 +18,9 @@
 #include <stdlib.h>   // 동적 메모리 할당(malloc, free) 함수 사용을 위한 헤더
 #include <stdio.h>    // 입출력 함수(printf 등) 사용을 위한 헤더
 #include <ctype.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 int getch(void);
 
@@ -136,6 +139,20 @@ struct TextBox {
 };
 
 
+/*
+  [입력]   [리스트], [데이터]
+  └───────────────┐
+                  ▼
+          [새 노드 생성]
+                  │
+        [리스트가 비었는가?]
+          ├─ 예: [head로 지정]
+          └─ 아니오: [마지막 노드까지 이동하여 next에 연결]
+                  │
+            [size 증가]
+                  ▼
+                [함수 종료]
+ */
 // 리스트에 새로운 데이터를 추가하는 함수
 void List_append(List* list, char data) {
     ListNode* node = (ListNode*)malloc(sizeof(ListNode)); // 새로운 노드 동적 할당
@@ -153,6 +170,23 @@ void List_append(List* list, char data) {
     list->size++;              // 리스트 크기 1 증가
 }
 
+
+/*
+  [입력]   [리스트], [인덱스], [데이터]
+  └───────────────┐
+                  ▼
+          [인덱스 범위 검사]
+                  │
+         (범위 초과 시 에러 출력 후 종료)
+                  │
+        [index==0?]
+          ├─ 예: [head 앞 삽입]
+          └─ 아니오: [index-1 노드까지 이동하여 연결 조정]
+                  │
+            [size 증가]
+                  ▼
+                [함수 종료]
+ */
 // 원하는 위치에 데이터를 삽입하는 함수
 void List_insert(List* list, int index, char data) {
     if (index < 0 || index > list->size) {
@@ -178,6 +212,22 @@ void List_insert(List* list, int index, char data) {
 }
 
 
+/*
+  [입력]   [리스트], [인덱스]
+  └───────────────┐
+                  ▼
+          [인덱스 범위 검사]
+                  │
+         (범위 초과 시 에러 출력 후 종료)
+                  │
+        [index==0?]
+          ├─ 예: [head 삭제 후 head를 다음 노드로]
+          └─ 아니오: [index-1 노드까지 이동 후 다음 노드 삭제]
+                  │
+            [size 감소]
+                  ▼
+                [함수 종료]
+ */
 // 리스트에서 인덱스 위치 노드를 삭제하는 함수
 void List_deleteByIndex(List* list, int index) {
     if (index < 0 || index >= list->size) {
@@ -201,6 +251,19 @@ void List_deleteByIndex(List* list, int index) {
     list->size--;
 }
 
+
+/*
+  [입력]   [리스트]
+  └───────────────┐
+                  ▼
+        [현재 노드 = head]
+                  │
+        [NULL이 될 때까지 data 출력]
+                  │
+              [줄바꿈]
+                  ▼
+                [함수 종료]
+ */
 // 리스트 전체 내용을 출력하는 함수 (숫자형 기반 출력)
 // 내부적으로 쓰이고, CLI용은 별도로 처리
 void List_print(List* list) {
@@ -214,7 +277,20 @@ void List_print(List* list) {
 }
 
 
-// 인덱스를 통해 특정 위치의 데이터를 읽는 함수
+/*
+  [입력]   [리스트], [인덱스]
+  └───────────────┐
+                  ▼
+          [인덱스 범위 검사]
+                  │
+         (범위 초과 시 에러 출력 및 0 반환)
+                  │
+        [head 노드부터 인덱스까지 노드 이동]
+                  │
+          [해당 노드의 데이터 반환]
+                  ▼
+                [함수 종료]
+ */
 char List_readByIndex(List* list, int index) {
     if (index < 0 || index >= list->size) {
         printf("Index out of range!\n"); // 범위 초과시 오류 출력
@@ -227,6 +303,20 @@ char List_readByIndex(List* list, int index) {
 }
 
 
+/*
+  [입력]   [리스트]
+  └───────────────┐
+                  ▼
+        [현재 노드 = head]
+                  │
+        [다음 노드 보관 후 현재 free]
+                  │
+        [현재 = 다음으로 이동하며 반복]
+                  │
+      [head = NULL, size = 0 설정]
+                  ▼
+                [함수 종료]
+ */
 // 리스트 전체 노드 메모리를 해제하는 함수
 void List_free(List* list) {
     ListNode* node = list->head;
@@ -239,6 +329,16 @@ void List_free(List* list) {
     list->size = 0;                  // 크기 0으로 초기화
 }
 
+/*
+  [입력]   [리스트]
+  └───────────────┐
+                  ▼
+        [head=NULL, size=0 초기화]
+                  │
+     [함수 포인터 바인딩(append/print/...)]
+                  ▼
+                [함수 종료]
+ */
 // 리스트 구조체를 초기화하고 함수 포인터를 연결하는 함수
 void List_init(List* list) {
     list->head = NULL;                   // head 포인터 초기화
@@ -257,12 +357,40 @@ void List_init(List* list) {
  * 리스트와 커서 위치를 내부에서 관리하며 동작
  */
 
+// 터미널 화면을 지우고 커서를 홈으로 이동 (플랫폼별 처리)
+static void clearScreen(void) {
+#ifdef _WIN32
+    // Windows 콘솔: 화면 지우고 커서를 (0,0)으로 이동
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE) return;
+
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    DWORD cellCount;
+    DWORD count;
+    COORD home = {0, 0};
+
+    if (!GetConsoleScreenBufferInfo(hOut, &csbi)) return;
+    cellCount = csbi.dwSize.X * csbi.dwSize.Y;
+
+    // 화면을 공백으로 채움
+    FillConsoleOutputCharacter(hOut, (TCHAR)' ', cellCount, home, &count);
+    // 속성도 초기화
+    FillConsoleOutputAttribute(hOut, csbi.wAttributes, cellCount, home, &count);
+    // 커서 홈으로 이동
+    SetConsoleCursorPosition(hOut, home);
+#else
+    // 유닉스 계열: ESC[2J 화면 지우기, ESC[H 커서 홈 이동
+    printf("\033[2J\033[H");
+    fflush(stdout);
+#endif
+}
+
 // 말풍선 형태로 텍스트와 커서 출력
 void TextBox_printBubble(TextBox* tb) {
+    clearScreen();
     int len = tb->text.size;
 
     // 위쪽 말풍선 선 (╭───╮)
-    printf("\r"); // 캐리지 리턴으로 라인 맨 앞으로
     printf("╭");
     for (int i = 0; i < len + 1; i++) { // +1은 커서 공간 포함
         printf("─");
