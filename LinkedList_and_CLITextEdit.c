@@ -26,11 +26,38 @@
 #include <stdio.h>    // 입출력 함수(printf 등) 사용을 위한 헤더
 #include <string.h>
 #include <ctype.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-int getch(void);
+
+// 간단한 콘솔 입력 처리를 위한 (리눅스: termios, 윈도우: _getch 등 안내 주석)
+#ifdef _WIN32
+#include <conio.h> // Windows 전용 키 입력 함수
+
+/* 기존 코드 전체에서 getch()를 변경하지 않도록 getch를 _getch로 매핑합니다.
+   conio.h에 이미 getch 함수/매크로가 있으면 충돌하지 않도록 간단한 조건부 매핑을 사용합니다. */
+#ifndef getch
+#define getch _getch
+#endif
+
+#else
+// macOS, Linux 등 유닉스 계열에서 한 글자씩 입력받기 위한 termios 기반 getch 함수
+#include <termios.h>
+#include <unistd.h>
+int getch(void) {
+    struct termios oldt, newt;
+    int ch;
+    tcgetattr(STDIN_FILENO, &oldt); // 현재 터미널 속성 저장
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO); // 표준 입력 버퍼링·에코 끄기
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt); // 새로운 속성 적용
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // 원복
+    return ch;
+}
+#endif
 
 unsigned int a;     // 0 ~ (2^32)-1 까지 저장하는 4바이트 정수
 unsigned int b;     // 예시용 전역 변수
@@ -360,7 +387,7 @@ void List_init(List* list) {
 }
 
 
-/* 
+/*
  * TextBox용 멤버 함수 구현
  * 리스트와 커서 위치를 내부에서 관리하며 동작
  */
@@ -581,25 +608,7 @@ void TextBox_init(TextBox* tb) {
 }
 
 
-// 간단한 콘솔 입력 처리를 위한 (리눅스: termios, 윈도우: _getch 등 안내 주석)
-#ifdef _WIN32
-#include <conio.h> // Windows 전용 키 입력 함수
-#else
-// macOS, Linux 등 유닉스 계열에서 한 글자씩 입력받기 위한 termios 기반 getch 함수
-#include <termios.h>
-#include <unistd.h>
-int getch(void) {
-    struct termios oldt, newt;
-    int ch;
-    tcgetattr(STDIN_FILENO, &oldt); // 현재 터미널 속성 저장
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO); // 표준 입력 버퍼링·에코 끄기
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt); // 새로운 속성 적용
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // 원복
-    return ch;
-}
-#endif
+
 
 
 /*
@@ -665,4 +674,5 @@ int main(void) {
 #endif
     return 0;
 }
+
 
